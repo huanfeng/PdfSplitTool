@@ -1,0 +1,101 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import type { SplitConfig, ConfigSnapshot } from '../types'
+
+// mock pdf-lib — 使用 vi.hoisted 确保变量在 hoisting 后可用
+const {
+  mockSetCropBox,
+  mockGetMediaBox,
+  mockCopyPages,
+  mockAddPage,
+  mockSave,
+} = vi.hoisted(() => {
+  const mockSetCropBox = vi.fn()
+  const mockGetMediaBox = vi.fn().mockReturnValue({ x: 0, y: 0, width: 800, height: 600 })
+  const mockAddPage = vi.fn()
+  const mockSave = vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3]))
+  const mockCopyPages = vi.fn().mockImplementation((_src: unknown, indices: number[]) =>
+    Promise.resolve(
+      indices.map(() => ({ getMediaBox: mockGetMediaBox, setCropBox: mockSetCropBox }))
+    )
+  )
+  return { mockSetCropBox, mockGetMediaBox, mockCopyPages, mockAddPage, mockSave }
+})
+
+vi.mock('pdf-lib', () => ({
+  PDFDocument: {
+    load: vi.fn().mockResolvedValue({
+      getPageCount: () => 2,
+      getPageIndices: () => [0, 1],
+    }),
+    create: vi.fn().mockResolvedValue({
+      copyPages: mockCopyPages,
+      addPage: mockAddPage,
+      save: mockSave,
+    }),
+  },
+}))
+
+import { splitPDF } from './pdfSplitter'
+
+const baseSnap = (overrides: Partial<ConfigSnapshot> = {}): ConfigSnapshot => ({
+  globalConfig: { ratio: 0.5, direction: 'vertical' },
+  oddEvenConfig: {},
+  rangeConfigs: [],
+  pageConfigs: {},
+  ...overrides,
+})
+
+describe('splitPDF', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('每页生成两个 CropBox，共调用 2*pageCount 次 setCropBox', async () => {
+    const bytes = new ArrayBuffer(8)
+    await splitPDF(bytes, 2, baseSnap())
+    expect(mockSetCropBox).toHaveBeenCalledTimes(4) // 2页 × 2次
+  })
+
+  it('垂直分割时左页 width = ratio*pageWidth', async () => {
+    const bytes = new ArrayBuffer(8)
+    await splitPDF(bytes, 1, baseSnap())
+    // 第一次调用：左页 setCropBox(0, 0, 400, 600)
+    expect(mockSetCropBox).toHaveBeenNthCalledWith(1, 0, 0, 400, 600)
+    // 第二次调用：右页 setCropBox(400, 0, 400, 600)
+    expect(mockSetCropBox).toHaveBeenNthCalledWith(2, 400, 0, 400, 600)
+  })
+
+  it('水平分割时上页从 height*(1-ratio) 开始', async () => {
+    const snap = baseSnap({ globalConfig: { ratio: 0.5, direction: 'horizontal' } })
+    const bytes = new ArrayBuffer(8)
+    await splitPDF(bytes, 1, snap)
+    // 上半页: setCropBox(0, 300, 800, 300)
+    expect(mockSetCropBox).toHaveBeenNthCalledWith(1, 0, 300, 800, 300)
+    // 下半页: setCropBox(0, 0, 800, 300)
+    expect(mockSetCropBox).toHaveBeenNthCalledWith(2, 0, 0, 800, 300)
+  })
+
+  it('返回 Uint8Array', async () => {
+    const result = await splitPDF(new ArrayBuffer(8), 1, baseSnap())
+    expect(result).toBeInstanceOf(Uint8Array)
+  })
+})
+
+import { splitPDFToPages } from './pdfSplitter'
+
+describe('splitPDFToPages', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('返回长度等于 pageCount 的数组', async () => {
+    const results = await splitPDFToPages(new ArrayBuffer(8), 3, baseSnap())
+    expect(results).toHaveLength(3)
+  })
+
+  it('每个元素都是 Uint8Array', async () => {
+    const results = await splitPDFToPages(new ArrayBuffer(8), 2, baseSnap())
+    for (const r of results) expect(r).toBeInstanceOf(Uint8Array)
+  })
+
+  it('每页独立调用 PDFDocument.create 和 save', async () => {
+    await splitPDFToPages(new ArrayBuffer(8), 2, baseSnap())
+    expect(mockSave).toHaveBeenCalledTimes(2)
+  })
+})
