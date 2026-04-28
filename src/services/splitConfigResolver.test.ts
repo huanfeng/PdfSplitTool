@@ -26,9 +26,12 @@ describe('resolveConfig', () => {
     expect(resolveConfig(2, snap({ oddEvenConfig: { even: evenCfg } }))).toEqual(evenCfg)
   })
 
-  it('奇数页不使用偶页配置', () => {
+  it('奇偶页互斥：奇数页只用奇页配置，偶数页只用偶页配置', () => {
+    const oddCfg: SplitConfig = { ratio: 0.45, direction: 'vertical' }
     const evenCfg: SplitConfig = { ratio: 0.55, direction: 'vertical' }
-    expect(resolveConfig(3, snap({ oddEvenConfig: { even: evenCfg } }))).toEqual(V)
+    const s = snap({ oddEvenConfig: { odd: oddCfg, even: evenCfg } })
+    expect(resolveConfig(3, s)).toEqual(oddCfg)   // 奇数页使用奇页配置
+    expect(resolveConfig(2, s)).toEqual(evenCfg)  // 偶数页使用偶页配置
   })
 
   it('页范围覆盖奇偶配置', () => {
@@ -64,9 +67,14 @@ describe('resolveConfig', () => {
     expect(resolveConfig(2, s)).toEqual(cfg1)
   })
 
-  it('不在范围内的页使用全局配置', () => {
-    const s = snap({ rangeConfigs: [{ from: 3, to: 5, config: { ratio: 0.6, direction: 'vertical' } }] })
+  it('不在范围内的页使用全局配置，端点本身属于范围内', () => {
+    const rangeCfg: SplitConfig = { ratio: 0.6, direction: 'vertical' }
+    const s = snap({ rangeConfigs: [{ from: 3, to: 5, config: rangeCfg }] })
+    // 范围外
     expect(resolveConfig(1, s)).toEqual(V)
     expect(resolveConfig(6, s)).toEqual(V)
+    // 端点本身属于范围内
+    expect(resolveConfig(3, s)).toEqual(rangeCfg)  // from 端点
+    expect(resolveConfig(5, s)).toEqual(rangeCfg)  // to 端点
   })
 })
