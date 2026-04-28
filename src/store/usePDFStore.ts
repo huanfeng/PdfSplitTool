@@ -13,7 +13,9 @@ function snapshotState(state: PDFStore): ConfigSnapshot {
       even: state.oddEvenConfig.even ? { ...state.oddEvenConfig.even } : undefined,
     },
     rangeConfigs: state.rangeConfigs.map(r => ({ ...r, config: { ...r.config } })),
-    pageConfigs: { ...state.pageConfigs },
+    pageConfigs: Object.fromEntries(
+      Object.entries(state.pageConfigs).map(([k, v]) => [k, { ...v }])
+    ),
   }
 }
 
@@ -84,8 +86,10 @@ export const usePDFStore = create<PDFStore>((set, get) => ({
     const snapshot = snapshotState(state)
     const newHistory = state.history.slice(0, state.historyIndex + 1)
     newHistory.push(snapshot)
-    if (newHistory.length > MAX_HISTORY) newHistory.shift()
-    set({ history: newHistory, historyIndex: newHistory.length - 1 })
+    const capped = newHistory.length > MAX_HISTORY
+      ? newHistory.slice(newHistory.length - MAX_HISTORY)
+      : newHistory
+    set({ history: capped, historyIndex: capped.length - 1 })
   },
 
   undo: () => {

@@ -50,4 +50,30 @@ describe('usePDFStore', () => {
     expect(oddEvenConfig.odd?.ratio).toBe(0.45)
     expect(oddEvenConfig.even?.ratio).toBe(0.55)
   })
+
+  it('pushHistory 超过 50 步时移除最旧快照', () => {
+    for (let i = 0; i < 51; i++) {
+      usePDFStore.getState().setGlobalConfig({ ratio: i / 100, direction: 'vertical' })
+      usePDFStore.getState().pushHistory()
+    }
+    expect(usePDFStore.getState().history).toHaveLength(50)
+  })
+
+  it('removeRangeConfig 移除指定索引的范围配置', () => {
+    const store = usePDFStore.getState()
+    store.addRangeConfig(1, 5, { ratio: 0.3, direction: 'vertical' })
+    store.addRangeConfig(6, 10, { ratio: 0.7, direction: 'horizontal' })
+    store.removeRangeConfig(0)
+    expect(usePDFStore.getState().rangeConfigs).toHaveLength(1)
+    expect(usePDFStore.getState().rangeConfigs[0].from).toBe(6)
+  })
+
+  it('undo 在 historyIndex <= 0 时不做任何操作', () => {
+    const store = usePDFStore.getState()
+    store.setGlobalConfig({ ratio: 0.3, direction: 'vertical' })
+    store.pushHistory()
+    // historyIndex === 0，再 undo 无效
+    store.undo()
+    expect(usePDFStore.getState().historyIndex).toBe(0)
+  })
 })
