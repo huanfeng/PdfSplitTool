@@ -1,0 +1,114 @@
+import { create } from 'zustand'
+import type { PDFStore, SplitConfig, ConfigSnapshot } from '../types'
+import { loadPDFDocument } from '../services/pdfRenderer'
+
+const DEFAULT_CONFIG: SplitConfig = { ratio: 0.5, direction: 'vertical' }
+const MAX_HISTORY = 50
+
+function snapshotState(state: PDFStore): ConfigSnapshot {
+  return {
+    globalConfig: { ...state.globalConfig },
+    oddEvenConfig: {
+      odd: state.oddEvenConfig.odd ? { ...state.oddEvenConfig.odd } : undefined,
+      even: state.oddEvenConfig.even ? { ...state.oddEvenConfig.even } : undefined,
+    },
+    rangeConfigs: state.rangeConfigs.map(r => ({ ...r, config: { ...r.config } })),
+    pageConfigs: { ...state.pageConfigs },
+  }
+}
+
+function restoreSnapshot(snapshot: ConfigSnapshot) {
+  return {
+    globalConfig: snapshot.globalConfig,
+    oddEvenConfig: snapshot.oddEvenConfig,
+    rangeConfigs: snapshot.rangeConfigs,
+    pageConfigs: snapshot.pageConfigs,
+  }
+}
+
+export const usePDFStore = create<PDFStore>((set, get) => ({
+  pdfDoc: null,
+  pdfBytes: null,
+  fileName: '',
+  pageCount: 0,
+  currentPage: 1,
+
+  globalConfig: { ...DEFAULT_CONFIG },
+  oddEvenConfig: {},
+  rangeConfigs: [],
+  pageConfigs: {},
+
+  thumbnailCache: {},
+  history: [],
+  historyIndex: -1,
+
+  loadPDF: async (file: File) => {
+    const buffer = await file.arrayBuffer()
+    const pdfDoc = await loadPDFDocument(buffer)
+    set({
+      pdfDoc,
+      pdfBytes: buffer,
+      fileName: file.name,
+      pageCount: pdfDoc.numPages,
+      currentPage: 1,
+      globalConfig: { ...DEFAULT_CONFIG },
+      oddEvenConfig: {},
+      rangeConfigs: [],
+      pageConfigs: {},
+      thumbnailCache: {},
+      history: [],
+      historyIndex: -1,
+    })
+  },
+
+  setCurrentPage: (page) => set({ currentPage: page }),
+
+  setGlobalConfig: (config) => set({ globalConfig: config }),
+  setOddConfig: (config) => set(s => ({ oddEvenConfig: { ...s.oddEvenConfig, odd: config } })),
+  setEvenConfig: (config) => set(s => ({ oddEvenConfig: { ...s.oddEvenConfig, even: config } })),
+
+  addRangeConfig: (from, to, config) =>
+    set(s => ({ rangeConfigs: [...s.rangeConfigs, { from, to, config }] })),
+
+  removeRangeConfig: (index) =>
+    set(s => ({ rangeConfigs: s.rangeConfigs.filter((_, i) => i !== index) })),
+
+  setPageConfig: (pageNum, config) =>
+    set(s => ({ pageConfigs: { ...s.pageConfigs, [pageNum]: config } })),
+
+  applyConfigToAll: (config) =>
+    set({ globalConfig: config, oddEvenConfig: {}, rangeConfigs: [], pageConfigs: {} }),
+
+  pushHistory: () => {
+    const state = get()
+    const snapshot = snapshotState(state)
+    const newHistory = state.history.slice(0, state.historyIndex + 1)
+    newHistory.push(snapshot)
+    if (newHistory.length > MAX_HISTORY) newHistory.shift()
+    set({ history: newHistory, historyIndex: newHistory.length - 1 })
+  },
+
+  undo: () => {
+    const { history, historyIndex } = get()
+    if (historyIndex <= 0) return
+    const newIndex = historyIndex - 1
+    set({ ...restoreSnapshot(history[newIndex]), historyIndex: newIndex })
+  },
+
+  redo: () => {
+    const { history, historyIndex } = get()
+    if (historyIndex >= history.length - 1) return
+    const newIndex = historyIndex + 1
+    set({ ...restoreSnapshot(history[newIndex]), historyIndex: newIndex })
+  },
+
+  setThumbnailCache: (pageNum, bitmap) =>
+    set(s => ({ thumbnailCache: { ...s.thumbnailCache, [pageNum]: bitmap } })),
+
+  reset: () =>
+    set({
+      pdfDoc: null, pdfBytes: null, fileName: '', pageCount: 0, currentPage: 1,
+      globalConfig: { ...DEFAULT_CONFIG }, oddEvenConfig: {}, rangeConfigs: [],
+      pageConfigs: {}, thumbnailCache: {}, history: [], historyIndex: -1,
+    }),
+}))
