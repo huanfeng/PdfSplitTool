@@ -47,19 +47,26 @@ export const usePDFStore = create<PDFStore>((set, get) => ({
   loadPDF: async (file: File) => {
     const buffer = await file.arrayBuffer()
     const pdfDoc = await loadPDFDocument(buffer)
+    const initialConfig = { ...DEFAULT_CONFIG }
+    const baseSnapshot = {
+      globalConfig: { ...initialConfig },
+      oddEvenConfig: {},
+      rangeConfigs: [],
+      pageConfigs: {},
+    }
     set({
       pdfDoc,
       pdfBytes: buffer,
       fileName: file.name,
       pageCount: pdfDoc.numPages,
       currentPage: 1,
-      globalConfig: { ...DEFAULT_CONFIG },
+      globalConfig: { ...initialConfig },
       oddEvenConfig: {},
       rangeConfigs: [],
       pageConfigs: {},
       thumbnailCache: {},
-      history: [],
-      historyIndex: -1,
+      history: [baseSnapshot],
+      historyIndex: 0,
     })
   },
 

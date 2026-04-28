@@ -4,20 +4,22 @@ import type { ConfigSnapshot } from '../types'
 // mock pdf-lib — 使用 vi.hoisted 确保变量在 hoisting 后可用
 const {
   mockSetCropBox,
+  mockSetMediaBox,
   mockCopyPages,
   mockAddPage,
   mockSave,
 } = vi.hoisted(() => {
   const mockSetCropBox = vi.fn()
+  const mockSetMediaBox = vi.fn()
   const mockGetMediaBox = vi.fn().mockReturnValue({ x: 0, y: 0, width: 800, height: 600 })
   const mockAddPage = vi.fn()
   const mockSave = vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3]))
   const mockCopyPages = vi.fn().mockImplementation((_src: unknown, indices: number[]) =>
     Promise.resolve(
-      indices.map(() => ({ getMediaBox: mockGetMediaBox, setCropBox: mockSetCropBox }))
+      indices.map(() => ({ getMediaBox: mockGetMediaBox, setCropBox: mockSetCropBox, setMediaBox: mockSetMediaBox }))
     )
   )
-  return { mockSetCropBox, mockGetMediaBox, mockCopyPages, mockAddPage, mockSave }
+  return { mockSetCropBox, mockSetMediaBox, mockGetMediaBox, mockCopyPages, mockAddPage, mockSave }
 })
 
 vi.mock('pdf-lib', () => ({

@@ -13,12 +13,16 @@ function applyCropBox(
   const { x, y, width, height } = mediaBox
   if (direction === 'vertical') {
     const splitX = width * clampedRatio
+    pageA.setMediaBox(x, y, splitX, height)
     pageA.setCropBox(x, y, splitX, height)
+    pageB.setMediaBox(x + splitX, y, width - splitX, height)
     pageB.setCropBox(x + splitX, y, width - splitX, height)
   } else {
     const splitY = height * (1 - clampedRatio)
-    pageA.setCropBox(x, y + splitY, width, height - splitY)  // 上半
-    pageB.setCropBox(x, y, width, splitY)                    // 下半
+    pageA.setMediaBox(x, y + splitY, width, height - splitY)
+    pageA.setCropBox(x, y + splitY, width, height - splitY)
+    pageB.setMediaBox(x, y, width, splitY)
+    pageB.setCropBox(x, y, width, splitY)
   }
 }
 
