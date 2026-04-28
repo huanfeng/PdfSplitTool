@@ -3,6 +3,7 @@ import { usePDFStore } from './store/usePDFStore'
 import { Header } from './components/Header'
 import { PageList } from './components/PageList'
 import { SplitCanvas } from './components/SplitCanvas'
+import { ConfigPanel } from './components/ConfigPanel'
 import './App.css'
 
 function App() {
@@ -30,9 +31,7 @@ function App() {
       <Header />
       <PageList />
       <SplitCanvas />
-      <div style={{ gridArea: 'config', background: 'var(--bg-base)', borderLeft: '1px solid var(--border)' }}>
-        {/* Task 10: ConfigPanel */}
-      </div>
+      <ConfigPanel />
     </div>
   )
 }

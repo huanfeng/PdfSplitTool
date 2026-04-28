@@ -1,0 +1,56 @@
+.panel {
+  grid-area: config;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow-y: auto;
+  background: var(--bg-base);
+  border-left: 1px solid var(--border);
+}
+
+.section {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.btnGroup, .modeGroup {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.modeGroup button { flex: 1; min-width: 0; font-size: 11px; padding: 4px 4px; }
+
+.active {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #fff !important;
+}
+
+.rangeRow { display: flex; align-items: center; gap: 6px; }
+.rangeRow input { width: 60px; }
+
+.ratioRow { display: flex; align-items: center; gap: 6px; }
+.ratioInput { width: 70px; font-size: 16px; font-weight: bold; color: var(--accent); }
+.pct { color: var(--text-muted); }
+
+.slider { width: 100%; accent-color: var(--accent); }
+
+.exportSection {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+}
