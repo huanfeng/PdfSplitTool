@@ -1,10 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import type { SplitConfig, ConfigSnapshot } from '../types'
+import type { ConfigSnapshot } from '../types'
 
 // mock pdf-lib — 使用 vi.hoisted 确保变量在 hoisting 后可用
 const {
   mockSetCropBox,
-  mockGetMediaBox,
   mockCopyPages,
   mockAddPage,
   mockSave,

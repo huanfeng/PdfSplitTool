@@ -20,7 +20,7 @@ export async function renderPageToCanvas(
   canvas.height = viewport.height
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('Failed to get 2d context')
-  await page.render({ canvasContext: ctx, viewport }).promise
+  await page.render({ canvasContext: ctx, viewport, canvas }).promise
 }
 
 export async function renderThumbnail(
@@ -38,7 +38,7 @@ export async function renderThumbnail(
   )
   const ctx = offscreen.getContext('2d')
   if (!ctx) throw new Error('Failed to get OffscreenCanvas 2d context')
-  await page.render({ canvasContext: ctx as unknown as CanvasRenderingContext2D, viewport }).promise
+  await page.render({ canvasContext: ctx as unknown as CanvasRenderingContext2D, viewport, canvas: offscreen as unknown as HTMLCanvasElement }).promise
   return createImageBitmap(offscreen)
 }
 

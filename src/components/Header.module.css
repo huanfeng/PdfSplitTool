@@ -12,6 +12,7 @@
   height: calc(100vh - 32px);
 }
 .dropzone:hover { border-color: var(--accent); }
+.dragging { border-color: var(--accent); background: rgba(88, 166, 255, 0.05); }
 .dropzoneInner { text-align: center; color: var(--text-muted); }
 .icon { font-size: 48px; display: block; margin-bottom: 12px; }
 .hint { font-size: 12px; margin-top: 4px; }

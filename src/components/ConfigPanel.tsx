@@ -11,7 +11,7 @@ export function ConfigPanel() {
   const {
     pdfBytes, pageCount, currentPage, fileName,
     globalConfig, oddEvenConfig, rangeConfigs, pageConfigs,
-    setGlobalConfig, setOddConfig, setEvenConfig,
+    setOddConfig, setEvenConfig,
     addRangeConfig, setPageConfig, applyConfigToAll, pushHistory,
   } = store
 

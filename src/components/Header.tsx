@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePDFStore } from '../store/usePDFStore'
 import styles from './Header.module.css'
 
@@ -6,16 +6,22 @@ export function Header() {
   const { fileName, pageCount, currentPage, setCurrentPage, undo, redo, historyIndex, history, loadPDF } =
     usePDFStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [pageInputValue, setPageInputValue] = useState(String(currentPage))
+  const [isDragging, setIsDragging] = useState(false)
+
+  useEffect(() => {
+    setPageInputValue(String(currentPage))
+  }, [currentPage])
 
   const handleFile = async (file: File) => {
-    if (!file || !file.name.endsWith('.pdf')) return
-    await loadPDF(file)
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    const file = e.dataTransfer.files[0]
-    if (file) handleFile(file)
+    if (!file) return
+    if (!file.name.endsWith('.pdf') && file.type !== 'application/pdf') return
+    try {
+      await loadPDF(file)
+    } catch (err) {
+      console.error('Failed to load PDF:', err)
+      alert('无法读取该 PDF 文件，请确认文件格式正确。')
+    }
   }
 
   const canUndo = historyIndex > 0
@@ -24,9 +30,11 @@ export function Header() {
   if (!fileName) {
     return (
       <header
-        className={styles.dropzone}
-        onDrop={handleDrop}
+        className={`${styles.dropzone} ${isDragging ? styles.dragging : ''}`}
+        onDrop={e => { e.preventDefault(); setIsDragging(false); const file = e.dataTransfer.files[0]; if (file) handleFile(file) }}
         onDragOver={e => e.preventDefault()}
+        onDragEnter={() => setIsDragging(true)}
+        onDragLeave={() => setIsDragging(false)}
         onClick={() => fileInputRef.current?.click()}
       >
         <div className={styles.dropzoneInner}>
@@ -55,10 +63,19 @@ export function Header() {
             type="number"
             min={1}
             max={pageCount}
-            value={currentPage}
-            onChange={e => {
-              const v = parseInt(e.target.value)
+            value={pageInputValue}
+            onChange={e => setPageInputValue(e.target.value)}
+            onBlur={() => {
+              const v = parseInt(pageInputValue)
               if (v >= 1 && v <= pageCount) setCurrentPage(v)
+              else setPageInputValue(String(currentPage))
+            }}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                const v = parseInt(pageInputValue)
+                if (v >= 1 && v <= pageCount) setCurrentPage(v)
+                else setPageInputValue(String(currentPage))
+              }
             }}
             className={styles.pageInput}
           />
@@ -70,6 +87,13 @@ export function Header() {
         <button onClick={undo} disabled={!canUndo} title="撤销 (Ctrl+Z)">↩ 撤销</button>
         <button onClick={redo} disabled={!canRedo} title="重做 (Ctrl+Y)">↪ 重做</button>
       </div>
+      <button
+        onClick={() => fileInputRef.current?.click()}
+        title="重新选择文件"
+        style={{ marginLeft: 'auto' }}
+      >
+        📂 换文件
+      </button>
       <input
         ref={fileInputRef}
         type="file"
