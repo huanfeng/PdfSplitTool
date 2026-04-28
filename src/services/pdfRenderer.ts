@@ -36,8 +36,9 @@ export async function renderThumbnail(
     Math.floor(viewport.width),
     Math.floor(viewport.height)
   )
-  const ctx = offscreen.getContext('2d') as CanvasRenderingContext2D
-  await page.render({ canvasContext: ctx, viewport }).promise
+  const ctx = offscreen.getContext('2d')
+  if (!ctx) throw new Error('Failed to get OffscreenCanvas 2d context')
+  await page.render({ canvasContext: ctx as unknown as CanvasRenderingContext2D, viewport }).promise
   return createImageBitmap(offscreen)
 }
 

@@ -18,7 +18,7 @@ vi.mock('pdfjs-dist', () => {
   }
 })
 
-import { loadPDFDocument, renderPageToCanvas, getPageDimensions } from './pdfRenderer'
+import { loadPDFDocument, renderPageToCanvas, getPageDimensions, renderThumbnail } from './pdfRenderer'
 import * as pdfjsLib from 'pdfjs-dist'
 
 describe('pdfRenderer', () => {
@@ -49,5 +49,19 @@ describe('pdfRenderer', () => {
     const doc = await loadPDFDocument(buffer)
     const dims = await getPageDimensions(doc, 1)
     expect(dims).toEqual({ width: 800, height: 600 })
+  })
+
+  it('renderThumbnail 使用 maxWidth 计算 scale 并返回 ImageBitmap', async () => {
+    const mockOffscreenCtx = {}
+    const mockOffscreenCanvas = { getContext: vi.fn().mockReturnValue(mockOffscreenCtx) }
+    vi.stubGlobal('OffscreenCanvas', vi.fn().mockImplementation(function () { return mockOffscreenCanvas }))
+    const mockBitmap = { width: 160, height: 120 }
+    vi.stubGlobal('createImageBitmap', vi.fn().mockResolvedValue(mockBitmap))
+
+    const doc = await loadPDFDocument(new ArrayBuffer(8))
+    // 页面原始宽 800，maxWidth=160 => scale=0.2, width=Math.floor(800*0.2)=160, height=Math.floor(600*0.2)=120
+    const bitmap = await renderThumbnail(doc, 1, 160)
+    expect(OffscreenCanvas).toHaveBeenCalledWith(160, 120)
+    expect(bitmap).toBe(mockBitmap)
   })
 })
