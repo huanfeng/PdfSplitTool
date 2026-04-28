@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { usePDFStore } from './store/usePDFStore'
 import { Header } from './components/Header'
+import { PageList } from './components/PageList'
 import './App.css'
 
 function App() {
@@ -26,9 +27,7 @@ function App() {
   return (
     <div className="app-layout">
       <Header />
-      <div style={{ gridArea: 'pagelist', background: 'var(--bg-base)', borderRight: '1px solid var(--border)' }}>
-        {/* Task 8: PageList */}
-      </div>
+      <PageList />
       <div style={{ gridArea: 'canvas', background: 'var(--bg-deep)' }}>
         {/* Task 9: SplitCanvas */}
       </div>
