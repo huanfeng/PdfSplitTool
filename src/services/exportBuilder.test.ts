@@ -19,9 +19,10 @@ Object.assign(globalThis, {
 // mock document.createElement('a') click
 const mockClick = vi.fn()
 const mockAnchor = { href: '', download: '', click: mockClick, remove: vi.fn() }
+const originalCreateElement = document.createElement.bind(document)
 vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
   if (tag === 'a') return mockAnchor as unknown as HTMLElement
-  return document.createElement(tag)
+  return originalCreateElement(tag)
 })
 vi.spyOn(document.body, 'appendChild').mockImplementation(() => mockAnchor as unknown as Node)
 
@@ -47,6 +48,17 @@ describe('exportBuilder', () => {
     expect(mockFile).toHaveBeenCalledTimes(2)
     expect(mockFile).toHaveBeenCalledWith('page-01.pdf', expect.any(Uint8Array))
     expect(mockGenerateAsync).toHaveBeenCalledWith({ type: 'blob' })
+    expect(mockCreateObjectURL).toHaveBeenCalled()
+    expect(mockAnchor.download).toBe('output.zip')
     expect(mockClick).toHaveBeenCalled()
+  })
+
+  it('downloadSinglePDF 在 1 秒后调用 revokeObjectURL', async () => {
+    vi.useFakeTimers()
+    await downloadSinglePDF(new Uint8Array([1, 2, 3]), 'test.pdf')
+    expect(mockRevokeObjectURL).not.toHaveBeenCalled()
+    vi.advanceTimersByTime(1000)
+    expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:mock-url')
+    vi.useRealTimers()
   })
 })

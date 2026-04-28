@@ -7,6 +7,7 @@ function triggerDownload(url: string, filename: string) {
   document.body.appendChild(a)
   a.click()
   a.remove()
+  // 给浏览器足够时间发起下载后再释放 Blob URL
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
