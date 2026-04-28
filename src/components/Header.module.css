@@ -1,0 +1,32 @@
+.dropzone {
+  grid-area: header;
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  margin: 16px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  height: calc(100vh - 32px);
+}
+.dropzone:hover { border-color: var(--accent); }
+.dropzoneInner { text-align: center; color: var(--text-muted); }
+.icon { font-size: 48px; display: block; margin-bottom: 12px; }
+.hint { font-size: 12px; margin-top: 4px; }
+
+.header {
+  grid-area: header;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  background: var(--bg-base);
+  border-bottom: 1px solid var(--border);
+}
+.filename { font-weight: 600; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.pageInfo { display: flex; align-items: center; gap: 4px; color: var(--text-muted); font-size: 13px; }
+.pageInput { width: 48px; text-align: center; }
+.actions { display: flex; gap: 6px; }
