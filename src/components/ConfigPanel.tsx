@@ -23,9 +23,7 @@ export function ConfigPanel() {
   const [rangeTo, setRangeTo] = useState(pageCount || 1)
   const [exporting, setExporting] = useState(false)
 
-  const updateRatio = (ratio: number) => {
-    const clamped = Math.max(0.05, Math.min(0.95, ratio))
-    const newConfig: SplitConfig = { ...config, ratio: clamped }
+  const dispatchConfig = (newConfig: SplitConfig) => {
     if (mode === 'uniform') applyConfigToAll(newConfig)
     else if (mode === 'oddeven') {
       if (currentPage % 2 === 1) setOddConfig(newConfig)
@@ -35,10 +33,13 @@ export function ConfigPanel() {
     pushHistory()
   }
 
+  const updateRatio = (ratio: number) => {
+    const clamped = Math.max(0.05, Math.min(0.95, ratio))
+    dispatchConfig({ ...config, ratio: clamped })
+  }
+
   const updateDirection = (direction: SplitConfig['direction']) => {
-    const newConfig: SplitConfig = { ...config, direction }
-    setPageConfig(currentPage, newConfig)
-    pushHistory()
+    dispatchConfig({ ...config, direction })
   }
 
   const handleExport = async (type: 'single' | 'zip') => {
@@ -57,6 +58,9 @@ export function ConfigPanel() {
         }))
         await downloadZIP(pages, `${baseName}-split.zip`)
       }
+    } catch (err) {
+      console.error('Export failed:', err)
+      alert('导出失败，请重试。')
     } finally {
       setExporting(false)
     }
