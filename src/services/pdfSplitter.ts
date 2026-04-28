@@ -9,13 +9,14 @@ function applyCropBox(
   ratio: number,
   direction: 'vertical' | 'horizontal'
 ) {
+  const clampedRatio = Math.max(0.01, Math.min(0.99, ratio))
   const { x, y, width, height } = mediaBox
   if (direction === 'vertical') {
-    const splitX = width * ratio
+    const splitX = width * clampedRatio
     pageA.setCropBox(x, y, splitX, height)
     pageB.setCropBox(x + splitX, y, width - splitX, height)
   } else {
-    const splitY = height * (1 - ratio)
+    const splitY = height * (1 - clampedRatio)
     pageA.setCropBox(x, y + splitY, width, height - splitY)  // 上半
     pageB.setCropBox(x, y, width, splitY)                    // 下半
   }
@@ -28,6 +29,12 @@ export async function splitPDF(
   snapshot: ConfigSnapshot
 ): Promise<Uint8Array> {
   const srcDoc = await PDFDocument.load(pdfBytes)
+  const actualPageCount = srcDoc.getPageCount()
+  if (pageCount > actualPageCount) {
+    throw new RangeError(
+      `pageCount (${pageCount}) exceeds document page count (${actualPageCount})`
+    )
+  }
   const dstDoc = await PDFDocument.create()
 
   for (let i = 0; i < pageCount; i++) {
@@ -48,6 +55,12 @@ export async function splitPDFToPages(
   snapshot: ConfigSnapshot
 ): Promise<Uint8Array[]> {
   const srcDoc = await PDFDocument.load(pdfBytes)
+  const actualPageCount = srcDoc.getPageCount()
+  if (pageCount > actualPageCount) {
+    throw new RangeError(
+      `pageCount (${pageCount}) exceeds document page count (${actualPageCount})`
+    )
+  }
   const results: Uint8Array[] = []
 
   for (let i = 0; i < pageCount; i++) {

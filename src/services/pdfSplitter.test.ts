@@ -24,7 +24,7 @@ const {
 vi.mock('pdf-lib', () => ({
   PDFDocument: {
     load: vi.fn().mockResolvedValue({
-      getPageCount: () => 2,
+      getPageCount: () => 10,
       getPageIndices: () => [0, 1],
     }),
     create: vi.fn().mockResolvedValue({
@@ -97,5 +97,26 @@ describe('splitPDFToPages', () => {
   it('每页独立调用 PDFDocument.create 和 save', async () => {
     await splitPDFToPages(new ArrayBuffer(8), 2, baseSnap())
     expect(mockSave).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('applyCropBox clamp', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('ratio=0 时 clamp 后 CropBox 宽度大于 0', async () => {
+    const snap = baseSnap({ globalConfig: { ratio: 0, direction: 'vertical' } })
+    await splitPDF(new ArrayBuffer(8), 1, snap)
+    const calls = mockSetCropBox.mock.calls
+    // 左页和右页的 width 参数（第3个参数）都应大于 0
+    expect(calls[0][2]).toBeGreaterThan(0)
+    expect(calls[1][2]).toBeGreaterThan(0)
+  })
+
+  it('ratio=1 时 clamp 后右页起始位置不超出 mediaBox', async () => {
+    const snap = baseSnap({ globalConfig: { ratio: 1, direction: 'vertical' } })
+    await splitPDF(new ArrayBuffer(8), 1, snap)
+    const calls = mockSetCropBox.mock.calls
+    // 右页 x（第1个参数）+ width（第3个参数）不超过 mediaBox.width=800
+    expect(calls[1][0] + calls[1][2]).toBeLessThanOrEqual(800)
   })
 })
