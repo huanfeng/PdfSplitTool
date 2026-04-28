@@ -1,0 +1,31 @@
+.container {
+  grid-area: canvas;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  background: var(--bg-deep);
+  padding: 16px;
+}
+
+.wrapper {
+  position: relative;
+  display: inline-block;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+
+.canvas {
+  display: block;
+  max-width: 100%;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.overlay circle {
+  pointer-events: all;
+}
