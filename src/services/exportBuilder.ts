@@ -2,13 +2,15 @@ import JSZip from 'jszip'
 
 function triggerDownload(url: string, filename: string) {
   const a = document.createElement('a')
+  if (a.style) a.style.display = 'none'
   a.href = url
   a.download = filename
   document.body.appendChild(a)
   a.click()
-  a.remove()
-  // 给浏览器足够时间发起下载后再释放 Blob URL
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
+  setTimeout(() => {
+    if (a instanceof Element && document.body.contains(a)) document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }, 1000)
 }
 
 export async function downloadSinglePDF(bytes: Uint8Array, filename: string): Promise<void> {

@@ -31,3 +31,26 @@
 .pageInfo { display: flex; align-items: center; gap: 4px; color: var(--text-muted); font-size: 13px; white-space: nowrap; }
 .pageInput { width: 48px; text-align: center; }
 .actions { display: flex; gap: 6px; }
+
+.zoomBar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border-left: 1px solid var(--border);
+  padding-left: 10px;
+  margin-left: 4px;
+}
+.zoomBtn {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 5px;
+  font-size: 13px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  cursor: pointer;
+}
+.zoomBtn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.zoomBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.zoomLabel { font-size: 12px; color: var(--text-muted); min-width: 36px; text-align: center; }

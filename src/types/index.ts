@@ -25,6 +25,9 @@ export interface PDFState {
   pageCount: number
   currentPage: number    // 1-based
 
+  mode: 'uniform' | 'oddeven' | 'range' | 'page'
+  zoom: number
+
   globalConfig: SplitConfig
   oddEvenConfig: { odd?: SplitConfig; even?: SplitConfig }
   rangeConfigs: RangeConfig[]
@@ -39,6 +42,8 @@ export interface PDFState {
 export interface PDFActions {
   loadPDF: (file: File) => Promise<void>
   setCurrentPage: (page: number) => void
+  setMode: (mode: 'uniform' | 'oddeven' | 'range' | 'page') => void
+  setZoom: (zoom: number) => void
   setGlobalConfig: (config: SplitConfig) => void
   setOddConfig: (config: SplitConfig) => void
   setEvenConfig: (config: SplitConfig) => void

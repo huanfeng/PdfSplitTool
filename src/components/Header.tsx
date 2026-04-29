@@ -3,7 +3,7 @@ import { usePDFStore } from '../store/usePDFStore'
 import styles from './Header.module.css'
 
 export function Header() {
-  const { fileName, pageCount, currentPage, setCurrentPage, undo, redo, historyIndex, history, loadPDF } =
+  const { fileName, pageCount, currentPage, setCurrentPage, undo, redo, historyIndex, history, loadPDF, zoom, setZoom } =
     usePDFStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [pageInputValue, setPageInputValue] = useState(String(currentPage))
@@ -86,6 +86,12 @@ export function Header() {
       <div className={styles.actions}>
         <button onClick={undo} disabled={!canUndo} title="撤销 (Ctrl+Z)">↩ 撤销</button>
         <button onClick={redo} disabled={!canRedo} title="重做 (Ctrl+Y)">↪ 重做</button>
+      </div>
+      <div className={styles.zoomBar}>
+        <button className={styles.zoomBtn} onClick={() => setZoom(Math.max(0.5, parseFloat((zoom - 0.25).toFixed(2))))} disabled={zoom <= 0.5}>−</button>
+        <span className={styles.zoomLabel}>{Math.round(zoom * 100)}%</span>
+        <button className={styles.zoomBtn} onClick={() => setZoom(Math.min(3, parseFloat((zoom + 0.25).toFixed(2))))} disabled={zoom >= 3}>+</button>
+        <button className={styles.zoomBtn} onClick={() => setZoom(1)} title="重置">↺</button>
       </div>
       <button
         onClick={() => fileInputRef.current?.click()}

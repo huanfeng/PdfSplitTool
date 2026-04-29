@@ -11,6 +11,7 @@ export function ConfigPanel() {
   const {
     pdfBytes, pageCount, currentPage, fileName,
     globalConfig, oddEvenConfig, rangeConfigs, pageConfigs,
+    mode, setMode,
     setOddConfig, setEvenConfig,
     addRangeConfig, setPageConfig, applyConfigToAll, pushHistory,
   } = store
@@ -18,10 +19,10 @@ export function ConfigPanel() {
   const snapshot = { globalConfig, oddEvenConfig, rangeConfigs, pageConfigs }
   const config = resolveConfig(currentPage, snapshot)
 
-  const [mode, setMode] = useState<'uniform' | 'oddeven' | 'range' | 'page'>('uniform')
   const [rangeFrom, setRangeFrom] = useState(1)
   const [rangeTo, setRangeTo] = useState(pageCount || 1)
   const [exporting, setExporting] = useState(false)
+  const [exportSuccess, setExportSuccess] = useState<string | null>(null)
 
   const dispatchConfig = (newConfig: SplitConfig) => {
     if (mode === 'uniform') applyConfigToAll(newConfig)
@@ -58,6 +59,8 @@ export function ConfigPanel() {
         }))
         await downloadZIP(pages, `${baseName}-split.zip`)
       }
+      setExportSuccess(type === 'single' ? 'PDF 已下载' : 'ZIP 已下载')
+      setTimeout(() => setExportSuccess(null), 2500)
     } catch (err) {
       console.error('Export failed:', err)
       alert('导出失败，请重试。')
@@ -136,6 +139,11 @@ export function ConfigPanel() {
         <button onClick={() => handleExport('zip')} disabled={exporting}>
           {exporting ? '导出中...' : '⬇ 下载 ZIP'}
         </button>
+        {exportSuccess && (
+          <p style={{ color: 'var(--success)', fontSize: '12px', textAlign: 'center', margin: 0 }}>
+            ✓ {exportSuccess}
+          </p>
+        )}
       </section>
     </div>
   )

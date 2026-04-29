@@ -35,6 +35,9 @@ export const usePDFStore = create<PDFStore>((set, get) => ({
   pageCount: 0,
   currentPage: 1,
 
+  mode: 'uniform' as const,
+  zoom: 1.0,
+
   globalConfig: { ...DEFAULT_CONFIG },
   oddEvenConfig: {},
   rangeConfigs: [],
@@ -60,6 +63,8 @@ export const usePDFStore = create<PDFStore>((set, get) => ({
       fileName: file.name,
       pageCount: pdfDoc.numPages,
       currentPage: 1,
+      mode: 'uniform' as const,
+      zoom: 1.0,
       globalConfig: { ...initialConfig },
       oddEvenConfig: {},
       rangeConfigs: [],
@@ -71,6 +76,9 @@ export const usePDFStore = create<PDFStore>((set, get) => ({
   },
 
   setCurrentPage: (page) => set({ currentPage: page }),
+
+  setMode: (mode) => set({ mode }),
+  setZoom: (zoom) => set({ zoom }),
 
   setGlobalConfig: (config) => set({ globalConfig: config }),
   setOddConfig: (config) => set(s => ({ oddEvenConfig: { ...s.oddEvenConfig, odd: config } })),
@@ -119,6 +127,7 @@ export const usePDFStore = create<PDFStore>((set, get) => ({
   reset: () =>
     set({
       pdfDoc: null, pdfBytes: null, fileName: '', pageCount: 0, currentPage: 1,
+      mode: 'uniform' as const, zoom: 1.0,
       globalConfig: { ...DEFAULT_CONFIG }, oddEvenConfig: {}, rangeConfigs: [],
       pageConfigs: {}, thumbnailCache: {}, history: [], historyIndex: -1,
     }),

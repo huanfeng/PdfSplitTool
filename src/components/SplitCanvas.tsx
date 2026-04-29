@@ -2,13 +2,14 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { usePDFStore } from '../store/usePDFStore'
 import { resolveConfig } from '../services/splitConfigResolver'
 import { renderPageToCanvas } from '../services/pdfRenderer'
+import type { SplitConfig } from '../types'
 import styles from './SplitCanvas.module.css'
 
 export function SplitCanvas() {
   const {
-    pdfDoc, currentPage,
+    pdfDoc, currentPage, mode, zoom, setZoom,
     globalConfig, oddEvenConfig, rangeConfigs, pageConfigs,
-    setPageConfig, pushHistory,
+    setPageConfig, setOddConfig, setEvenConfig, applyConfigToAll, pushHistory,
   } = usePDFStore()
 
   const snapshot = { globalConfig, oddEvenConfig, rangeConfigs, pageConfigs }
@@ -18,7 +19,6 @@ export function SplitCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [canvasSize, setCanvasSize] = useState({ w: 0, h: 0 })
   const [dragRatio, setDragRatio] = useState<number | null>(null)
-  const [zoom, setZoom] = useState(1.0)
 
   const effectiveRatio = dragRatio ?? config.ratio
   const isVertical = config.direction === 'vertical'
@@ -36,6 +36,17 @@ export function SplitCanvas() {
     return cancel
   }, [pdfDoc, currentPage, zoom])
 
+  const dispatchConfig = useCallback((newConfig: SplitConfig) => {
+    if (mode === 'uniform') applyConfigToAll(newConfig)
+    else if (mode === 'oddeven') {
+      if (currentPage % 2 === 1) setOddConfig(newConfig)
+      else setEvenConfig(newConfig)
+    } else {
+      setPageConfig(currentPage, newConfig)
+    }
+    pushHistory()
+  }, [mode, currentPage, applyConfigToAll, setOddConfig, setEvenConfig, setPageConfig, pushHistory])
+
   // 键盘微调
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -49,13 +60,14 @@ export function SplitCanvas() {
       if (!isVertical && e.key === 'ArrowDown') newRatio = current + step
       newRatio = Math.max(0.05, Math.min(0.95, newRatio))
       if (newRatio !== current) {
-        setPageConfig(currentPage, { ...config, ratio: newRatio })
-        pushHistory()
+        dispatchConfig({ ...config, ratio: newRatio })
       }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [config, currentPage, isVertical])
+  }, [config, isVertical, dispatchConfig])
+
+  const dragRatioRef = useRef<number | null>(null)
 
   const startDrag = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
@@ -70,24 +82,25 @@ export function SplitCanvas() {
       } else {
         ratio = (ev.clientY - rect.top) / rect.height
       }
-      setDragRatio(Math.max(0.05, Math.min(0.95, ratio)))
+      const clamped = Math.max(0.05, Math.min(0.95, ratio))
+      dragRatioRef.current = clamped
+      setDragRatio(clamped)
     }
 
-    const onUp = () => {
+    const onUp2 = () => {
       window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', onUp)
-      setDragRatio(prev => {
-        if (prev !== null) {
-          setPageConfig(currentPage, { ...config, ratio: prev })
-          pushHistory()
-        }
-        return null
-      })
+      window.removeEventListener('mouseup', onUp2)
+      const finalRatio = dragRatioRef.current
+      dragRatioRef.current = null
+      if (finalRatio !== null) {
+        dispatchConfig({ ...config, ratio: finalRatio })
+      }
+      setDragRatio(null)
     }
 
     window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
-  }, [isVertical, config, currentPage])
+    window.addEventListener('mouseup', onUp2)
+  }, [isVertical, config, dispatchConfig])
 
   if (!pdfDoc) return null
 
@@ -103,20 +116,6 @@ export function SplitCanvas() {
 
   return (
     <div ref={containerRef} className={styles.container}>
-      <div className={styles.zoomBar}>
-        <button
-          className={styles.zoomBtn}
-          onClick={() => setZoom(z => Math.max(0.5, parseFloat((z - 0.25).toFixed(2))))}
-          disabled={zoom <= 0.5}
-        >−</button>
-        <span className={styles.zoomLabel}>{Math.round(zoom * 100)}%</span>
-        <button
-          className={styles.zoomBtn}
-          onClick={() => setZoom(z => Math.min(3, parseFloat((z + 0.25).toFixed(2))))}
-          disabled={zoom >= 3}
-        >+</button>
-        <button className={styles.zoomBtn} onClick={() => setZoom(1)} title="重置缩放">↺</button>
-      </div>
       <div className={styles.wrapper}>
         <canvas ref={canvasRef} className={styles.canvas} />
         {canvasSize.w > 0 && (
