@@ -18,6 +18,7 @@ export function SplitCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [canvasSize, setCanvasSize] = useState({ w: 0, h: 0 })
   const [dragRatio, setDragRatio] = useState<number | null>(null)
+  const [zoom, setZoom] = useState(1.0)
 
   const effectiveRatio = dragRatio ?? config.ratio
   const isVertical = config.direction === 'vertical'
@@ -25,7 +26,7 @@ export function SplitCanvas() {
   // 渲染当前页
   useEffect(() => {
     if (!pdfDoc || !canvasRef.current || !containerRef.current) return
-    const containerW = containerRef.current.clientWidth - 32
+    const containerW = Math.max(100, (containerRef.current.clientWidth - 32) * zoom)
     const { promise, cancel } = renderPageToCanvas(pdfDoc, currentPage, canvasRef.current, containerW)
     promise.then(() => {
       if (canvasRef.current) {
@@ -33,7 +34,7 @@ export function SplitCanvas() {
       }
     }).catch(() => {})
     return cancel
-  }, [pdfDoc, currentPage])
+  }, [pdfDoc, currentPage, zoom])
 
   // 键盘微调
   useEffect(() => {
@@ -102,6 +103,20 @@ export function SplitCanvas() {
 
   return (
     <div ref={containerRef} className={styles.container}>
+      <div className={styles.zoomBar}>
+        <button
+          className={styles.zoomBtn}
+          onClick={() => setZoom(z => Math.max(0.5, parseFloat((z - 0.25).toFixed(2))))}
+          disabled={zoom <= 0.5}
+        >−</button>
+        <span className={styles.zoomLabel}>{Math.round(zoom * 100)}%</span>
+        <button
+          className={styles.zoomBtn}
+          onClick={() => setZoom(z => Math.min(3, parseFloat((z + 0.25).toFixed(2))))}
+          disabled={zoom >= 3}
+        >+</button>
+        <button className={styles.zoomBtn} onClick={() => setZoom(1)} title="重置缩放">↺</button>
+      </div>
       <div className={styles.wrapper}>
         <canvas ref={canvasRef} className={styles.canvas} />
         {canvasSize.w > 0 && (
@@ -115,6 +130,13 @@ export function SplitCanvas() {
               x1={lineX} y1={lineY} x2={lineX2} y2={lineY2}
               stroke="#e94560" strokeWidth={2}
               filter="drop-shadow(0 0 4px #e94560)"
+            />
+            <line
+              x1={lineX} y1={lineY} x2={lineX2} y2={lineY2}
+              stroke="transparent"
+              strokeWidth={16}
+              style={{ pointerEvents: 'all', cursor: isVertical ? 'ew-resize' : 'ns-resize' }}
+              onMouseDown={startDrag}
             />
             <circle
               cx={handleX} cy={handleY} r={10}

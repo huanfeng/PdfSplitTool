@@ -112,6 +112,7 @@ export function ConfigPanel() {
         </h4>
         <div className={styles.ratioRow}>
           <input
+            key={`ratio-num-${currentPage}`}
             type="number" min={5} max={95} step={0.5}
             value={(config.ratio * 100).toFixed(1)}
             onChange={e => updateRatio(Number(e.target.value) / 100)}
@@ -120,6 +121,7 @@ export function ConfigPanel() {
           <span className={styles.pct}>%</span>
         </div>
         <input
+          key={`ratio-range-${currentPage}`}
           type="range" min={5} max={95} step={0.5}
           value={config.ratio * 100}
           onChange={e => updateRatio(Number(e.target.value) / 100)}
