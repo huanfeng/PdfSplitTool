@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { usePDFStore } from './store/usePDFStore'
 import { Header } from './components/Header'
+import { LandingPage } from './components/LandingPage'
 import { PageList } from './components/PageList'
 import { SplitCanvas } from './components/SplitCanvas'
 import { ConfigPanel } from './components/ConfigPanel'
@@ -19,11 +20,7 @@ function App() {
   }, [undo, redo])
 
   if (!fileName) {
-    return (
-      <div style={{ height: '100vh', background: 'var(--bg-deep)' }}>
-        <Header />
-      </div>
-    )
+    return <LandingPage />
   }
 
   return (

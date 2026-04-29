@@ -38,7 +38,7 @@ describe('pdfRenderer', () => {
     // jsdom 不支持 canvas.getContext('2d')，mock 它返回一个假 context
     const mockCtx = {} as CanvasRenderingContext2D
     vi.spyOn(canvas, 'getContext').mockReturnValue(mockCtx)
-    await renderPageToCanvas(doc, 1, canvas, 400)
+    await renderPageToCanvas(doc, 1, canvas, 400).promise
     // scale = 400 / 800 = 0.5，viewport.width = 400, height = 300
     expect(canvas.width).toBe(400)
     expect(canvas.height).toBe(300)

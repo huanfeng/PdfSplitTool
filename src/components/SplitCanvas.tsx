@@ -25,16 +25,14 @@ export function SplitCanvas() {
   // 渲染当前页
   useEffect(() => {
     if (!pdfDoc || !canvasRef.current || !containerRef.current) return
-    let cancelled = false
     const containerW = containerRef.current.clientWidth - 32
-    renderPageToCanvas(pdfDoc, currentPage, canvasRef.current, containerW)
-      .then(() => {
-        if (!cancelled && canvasRef.current) {
-          setCanvasSize({ w: canvasRef.current.width, h: canvasRef.current.height })
-        }
-      })
-      .catch(() => {})
-    return () => { cancelled = true }
+    const { promise, cancel } = renderPageToCanvas(pdfDoc, currentPage, canvasRef.current, containerW)
+    promise.then(() => {
+      if (canvasRef.current) {
+        setCanvasSize({ w: canvasRef.current.width, h: canvasRef.current.height })
+      }
+    }).catch(() => {})
+    return cancel
   }, [pdfDoc, currentPage])
 
   // 键盘微调

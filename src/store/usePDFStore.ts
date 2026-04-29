@@ -46,7 +46,7 @@ export const usePDFStore = create<PDFStore>((set, get) => ({
 
   loadPDF: async (file: File) => {
     const buffer = await file.arrayBuffer()
-    const pdfDoc = await loadPDFDocument(buffer)
+    const pdfDoc = await loadPDFDocument(buffer.slice(0))  // 给 pdfjs 传副本，保留原始 buffer
     const initialConfig = { ...DEFAULT_CONFIG }
     const baseSnapshot = {
       globalConfig: { ...initialConfig },
@@ -56,7 +56,7 @@ export const usePDFStore = create<PDFStore>((set, get) => ({
     }
     set({
       pdfDoc,
-      pdfBytes: buffer,
+      pdfBytes: buffer,  // 主线程保留原始（未 detach）
       fileName: file.name,
       pageCount: pdfDoc.numPages,
       currentPage: 1,
