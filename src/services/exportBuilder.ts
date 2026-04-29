@@ -14,7 +14,7 @@ function triggerDownload(url: string, filename: string) {
 }
 
 export async function downloadSinglePDF(bytes: Uint8Array, filename: string): Promise<void> {
-  const blob = new Blob([bytes], { type: 'application/pdf' })
+  const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' })
   const url = URL.createObjectURL(blob)
   triggerDownload(url, filename)
 }
