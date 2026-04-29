@@ -6,18 +6,17 @@
   overflow: auto;
   background: var(--bg-deep);
   padding: 16px;
+  position: relative;
 }
-
 
 .wrapper {
   position: relative;
   display: inline-block;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  box-shadow: var(--shadow);
 }
 
 .canvas {
   display: block;
-  max-width: 100%;
 }
 
 .overlay {
@@ -29,4 +28,46 @@
 
 .overlay circle {
   pointer-events: all;
+}
+
+.zoomFloat {
+  position: sticky;
+  top: 0;
+  align-self: flex-end;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  margin-bottom: -36px;
+  margin-right: 4px;
+  user-select: none;
+}
+
+.zoomIcon { font-size: 12px; opacity: 0.8; padding-right: 2px; }
+
+.zoomBtn {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 4px;
+  font-size: 13px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  cursor: pointer;
+}
+.zoomBtn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.zoomBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.zoomLabel {
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 36px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }

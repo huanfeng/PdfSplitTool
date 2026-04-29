@@ -27,6 +27,9 @@ export interface PDFState {
 
   mode: 'uniform' | 'oddeven' | 'range' | 'page'
   zoom: number
+  renderQuality: 1 | 2
+  theme: 'dark' | 'light'
+  lastFileName: string
 
   globalConfig: SplitConfig
   oddEvenConfig: { odd?: SplitConfig; even?: SplitConfig }
@@ -44,6 +47,9 @@ export interface PDFActions {
   setCurrentPage: (page: number) => void
   setMode: (mode: 'uniform' | 'oddeven' | 'range' | 'page') => void
   setZoom: (zoom: number) => void
+  setRenderQuality: (quality: 1 | 2) => void
+  setTheme: (theme: 'dark' | 'light') => void
+  resetConfig: () => void
   setGlobalConfig: (config: SplitConfig) => void
   setOddConfig: (config: SplitConfig) => void
   setEvenConfig: (config: SplitConfig) => void

@@ -26,31 +26,35 @@
   background: var(--bg-base);
   border-bottom: 1px solid var(--border);
 }
-.filename { font-weight: 600; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.nav { display: flex; align-items: center; gap: 6px; margin-left: auto; white-space: nowrap; flex-shrink: 0; }
+.brand { display: flex; align-items: baseline; gap: 5px; flex-shrink: 0; }
+.appName { font-weight: 700; font-size: 14px; color: var(--accent); letter-spacing: 0.02em; }
+.version { font-size: 10px; color: var(--text-muted); }
+
+.filename {
+  font-weight: 500;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 360px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.nav { display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0; }
 .pageInfo { display: flex; align-items: center; gap: 4px; color: var(--text-muted); font-size: 13px; white-space: nowrap; }
 .pageInput { width: 48px; text-align: center; }
-.actions { display: flex; gap: 6px; }
 
-.zoomBar {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  border-left: 1px solid var(--border);
-  padding-left: 10px;
-  margin-left: 4px;
+.actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+.themeBtn {
+  flex-shrink: 0;
+  min-width: 30px;
+  padding: 4px 8px;
+  font-size: 14px;
 }
-.zoomBtn {
-  min-width: 24px;
-  height: 24px;
-  padding: 0 5px;
-  font-size: 13px;
-  background: var(--bg-raised);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  color: var(--text);
-  cursor: pointer;
-}
-.zoomBtn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-.zoomBtn:disabled { opacity: 0.4; cursor: not-allowed; }
-.zoomLabel { font-size: 12px; color: var(--text-muted); min-width: 36px; text-align: center; }
+
+.fileActions { display: flex; gap: 4px; flex-shrink: 0; }
+.closeBtn { color: var(--text-muted); }
+.closeBtn:hover { color: var(--danger) !important; border-color: var(--danger) !important; }

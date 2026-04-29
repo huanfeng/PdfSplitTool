@@ -3,7 +3,7 @@ import { usePDFStore } from '../store/usePDFStore'
 import styles from './LandingPage.module.css'
 
 export function LandingPage() {
-  const { loadPDF } = usePDFStore()
+  const { loadPDF, theme, setTheme } = usePDFStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
 
@@ -30,6 +30,13 @@ export function LandingPage() {
         if (file) handleFile(file)
       }}
     >
+      <button
+        className={styles.themeToggle}
+        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        title={theme === 'dark' ? '切换为亮色' : '切换为暗色'}
+      >
+        {theme === 'dark' ? '☀' : '🌙'}
+      </button>
       <div className={styles.hero}>
         <div className={styles.logoArea}>
           <span className={styles.logoIcon}>✂</span>
@@ -86,6 +93,9 @@ export function LandingPage() {
           </div>
         </div>
       </div>
+      <footer className={styles.footer}>
+        PDF Splitter <span className={styles.footerVersion}>v{__APP_VERSION__}</span>
+      </footer>
     </div>
   )
 }

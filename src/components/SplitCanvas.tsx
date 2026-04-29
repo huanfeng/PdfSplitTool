@@ -10,6 +10,7 @@ export function SplitCanvas() {
     pdfDoc, currentPage, mode, zoom, setZoom,
     globalConfig, oddEvenConfig, rangeConfigs, pageConfigs,
     setPageConfig, setOddConfig, setEvenConfig, applyConfigToAll, pushHistory,
+    renderQuality,
   } = usePDFStore()
 
   const snapshot = { globalConfig, oddEvenConfig, rangeConfigs, pageConfigs }
@@ -26,15 +27,18 @@ export function SplitCanvas() {
   // 渲染当前页
   useEffect(() => {
     if (!pdfDoc || !canvasRef.current || !containerRef.current) return
-    const containerW = Math.max(100, (containerRef.current.clientWidth - 32) * zoom)
-    const { promise, cancel } = renderPageToCanvas(pdfDoc, currentPage, canvasRef.current, containerW)
+    const containerW = Math.max(100, containerRef.current.clientWidth - 32)
+    const { promise, cancel } = renderPageToCanvas(pdfDoc, currentPage, canvasRef.current, containerW, renderQuality)
     promise.then(() => {
       if (canvasRef.current) {
-        setCanvasSize({ w: canvasRef.current.width, h: canvasRef.current.height })
+        setCanvasSize({
+          w: Math.round(canvasRef.current.width / renderQuality),
+          h: Math.round(canvasRef.current.height / renderQuality),
+        })
       }
     }).catch(() => {})
     return cancel
-  }, [pdfDoc, currentPage, zoom])
+  }, [pdfDoc, currentPage, renderQuality])
 
   const dispatchConfig = useCallback((newConfig: SplitConfig) => {
     if (mode === 'uniform') applyConfigToAll(newConfig)
@@ -102,6 +106,21 @@ export function SplitCanvas() {
     window.addEventListener('mouseup', onUp2)
   }, [isVertical, config, dispatchConfig])
 
+  // Ctrl/Alt + 滚轮缩放
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const onWheel = (e: WheelEvent) => {
+      if (!(e.ctrlKey || e.altKey)) return
+      e.preventDefault()
+      const step = e.deltaY > 0 ? -0.1 : 0.1
+      const next = Math.max(0.5, Math.min(3, parseFloat((zoom + step).toFixed(2))))
+      if (next !== zoom) setZoom(next)
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [zoom, setZoom])
+
   if (!pdfDoc) return null
 
   const lineX = isVertical ? canvasSize.w * effectiveRatio : 0
@@ -116,13 +135,21 @@ export function SplitCanvas() {
 
   return (
     <div ref={containerRef} className={styles.container}>
+      <div className={styles.zoomFloat} title="Ctrl/Alt + 滚轮可缩放">
+        <span className={styles.zoomIcon}>🔍</span>
+        <button className={styles.zoomBtn} onClick={() => setZoom(Math.max(0.5, parseFloat((zoom - 0.25).toFixed(2))))} disabled={zoom <= 0.5}>−</button>
+        <span className={styles.zoomLabel}>{Math.round(zoom * 100)}%</span>
+        <button className={styles.zoomBtn} onClick={() => setZoom(Math.min(3, parseFloat((zoom + 0.25).toFixed(2))))} disabled={zoom >= 3}>+</button>
+        <button className={styles.zoomBtn} onClick={() => setZoom(1)} title="重置缩放">↺</button>
+      </div>
       <div className={styles.wrapper}>
-        <canvas ref={canvasRef} className={styles.canvas} />
+        <canvas ref={canvasRef} className={styles.canvas} style={{ width: canvasSize.w * zoom, height: canvasSize.h * zoom }} />
         {canvasSize.w > 0 && (
           <svg
             className={styles.overlay}
-            width={canvasSize.w}
-            height={canvasSize.h}
+            width={canvasSize.w * zoom}
+            height={canvasSize.h * zoom}
+            viewBox={`0 0 ${canvasSize.w} ${canvasSize.h}`}
             style={{ cursor: isVertical ? 'ew-resize' : 'ns-resize' }}
           >
             <line

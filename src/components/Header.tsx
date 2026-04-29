@@ -2,9 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { usePDFStore } from '../store/usePDFStore'
 import styles from './Header.module.css'
 
+const APP_VERSION = `v${__APP_VERSION__}`
+
 export function Header() {
-  const { fileName, pageCount, currentPage, setCurrentPage, undo, redo, historyIndex, history, loadPDF, zoom, setZoom } =
-    usePDFStore()
+  const {
+    fileName, pageCount, currentPage, setCurrentPage,
+    undo, redo, historyIndex, history, loadPDF, reset,
+    theme, setTheme,
+  } = usePDFStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [pageInputValue, setPageInputValue] = useState(String(currentPage))
   const [isDragging, setIsDragging] = useState(false)
@@ -26,6 +31,7 @@ export function Header() {
 
   const canUndo = historyIndex > 0
   const canRedo = historyIndex < history.length - 1
+  const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark')
 
   if (!fileName) {
     return (
@@ -55,6 +61,10 @@ export function Header() {
 
   return (
     <header className={styles.header}>
+      <div className={styles.brand}>
+        <span className={styles.appName}>PDF Splitter</span>
+        <span className={styles.version}>{APP_VERSION}</span>
+      </div>
       <span className={styles.filename} title={fileName}>{fileName}</span>
       <div className={styles.nav}>
         <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage <= 1}>‹</button>
@@ -87,19 +97,13 @@ export function Header() {
         <button onClick={undo} disabled={!canUndo} title="撤销 (Ctrl+Z)">↩ 撤销</button>
         <button onClick={redo} disabled={!canRedo} title="重做 (Ctrl+Y)">↪ 重做</button>
       </div>
-      <div className={styles.zoomBar}>
-        <button className={styles.zoomBtn} onClick={() => setZoom(Math.max(0.5, parseFloat((zoom - 0.25).toFixed(2))))} disabled={zoom <= 0.5}>−</button>
-        <span className={styles.zoomLabel}>{Math.round(zoom * 100)}%</span>
-        <button className={styles.zoomBtn} onClick={() => setZoom(Math.min(3, parseFloat((zoom + 0.25).toFixed(2))))} disabled={zoom >= 3}>+</button>
-        <button className={styles.zoomBtn} onClick={() => setZoom(1)} title="重置">↺</button>
-      </div>
-      <button
-        onClick={() => fileInputRef.current?.click()}
-        title="重新选择文件"
-        style={{ marginLeft: 'auto' }}
-      >
-        📂 换文件
+      <button onClick={toggleTheme} title={theme === 'dark' ? '切换为亮色' : '切换为暗色'} className={styles.themeBtn}>
+        {theme === 'dark' ? '☀' : '🌙'}
       </button>
+      <div className={styles.fileActions}>
+        <button onClick={() => fileInputRef.current?.click()} title="换一个 PDF 文件">📂 换文件</button>
+        <button onClick={() => { if (confirm('确定关闭当前文件吗？')) reset() }} title="关闭文件" className={styles.closeBtn}>✕ 关闭</button>
+      </div>
       <input
         ref={fileInputRef}
         type="file"

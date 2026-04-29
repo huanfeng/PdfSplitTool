@@ -10,14 +10,15 @@ export function renderPageToCanvas(
   pdfDoc: PDFDocumentProxy,
   pageNum: number,
   canvas: HTMLCanvasElement,
-  containerWidth: number
+  containerWidth: number,
+  quality: 1 | 2 = 1
 ): { promise: Promise<void>; cancel: () => void } {
   let cancelFn: (() => void) | null = null
 
   const promise = (async () => {
     const page = await pdfDoc.getPage(pageNum)
     const baseViewport = page.getViewport({ scale: 1 })
-    const scale = containerWidth / baseViewport.width
+    const scale = (containerWidth / baseViewport.width) * quality
     const viewport = page.getViewport({ scale })
     canvas.width = viewport.width
     canvas.height = viewport.height

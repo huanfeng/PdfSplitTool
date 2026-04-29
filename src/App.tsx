@@ -8,7 +8,11 @@ import { ConfigPanel } from './components/ConfigPanel'
 import './App.css'
 
 function App() {
-  const { fileName, undo, redo } = usePDFStore()
+  const { fileName, undo, redo, theme } = usePDFStore()
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+  }, [theme])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

@@ -1,6 +1,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-:root {
+:root,
+:root[data-theme="dark"] {
   --bg-deep:    #0d1117;
   --bg-base:    #161b22;
   --bg-raised:  #1c2128;
@@ -12,13 +13,65 @@
   --danger:     #e94560;
   --success:    #3fb950;
   --warning:    #e3b341;
+  --shadow:     0 4px 24px rgba(0,0,0,0.5);
   --header-h:   48px;
   --pagelist-w: 120px;
   --config-w:   200px;
 }
 
+:root[data-theme="light"] {
+  --bg-deep:    #f6f8fa;
+  --bg-base:    #ffffff;
+  --bg-raised:  #f0f3f6;
+  --bg-card:    #e6ebf0;
+  --border:     #d0d7de;
+  --text:       #1f2328;
+  --text-muted: #59636e;
+  --accent:     #0969da;
+  --danger:     #d1242f;
+  --success:    #1a7f37;
+  --warning:    #9a6700;
+  --shadow:     0 4px 16px rgba(31, 35, 40, 0.15);
+}
+
 html, body, #root { height: 100%; }
-body { background: var(--bg-deep); color: var(--text); font-family: system-ui, sans-serif; font-size: 14px; }
+body {
+  background: var(--bg-deep);
+  color: var(--text);
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+  transition: background 0.2s, color 0.2s;
+}
+
+/* 现代化滚动条 - Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+/* 现代化滚动条 - WebKit/Blink */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background 0.15s;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
 
 .app-layout {
   display: grid;
@@ -61,7 +114,7 @@ input:focus { outline: 1px solid var(--accent); }
   color: #fff;
   font-weight: 600;
 }
-.btn-primary:hover { background: #2ea043; }
+.btn-primary:hover { background: var(--success); filter: brightness(1.1); }
 
 .btn-danger {
   background: var(--danger);

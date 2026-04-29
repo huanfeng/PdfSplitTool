@@ -13,7 +13,9 @@ export function ConfigPanel() {
     globalConfig, oddEvenConfig, rangeConfigs, pageConfigs,
     mode, setMode,
     setOddConfig, setEvenConfig,
-    addRangeConfig, setPageConfig, applyConfigToAll, pushHistory,
+    addRangeConfig, removeRangeConfig, setPageConfig, applyConfigToAll, pushHistory,
+    renderQuality, setRenderQuality,
+    resetConfig,
   } = store
 
   const snapshot = { globalConfig, oddEvenConfig, rangeConfigs, pageConfigs }
@@ -35,8 +37,7 @@ export function ConfigPanel() {
   }
 
   const updateRatio = (ratio: number) => {
-    const clamped = Math.max(0.05, Math.min(0.95, ratio))
-    dispatchConfig({ ...config, ratio: clamped })
+    dispatchConfig({ ...config, ratio: Math.max(0.05, Math.min(0.95, ratio)) })
   }
 
   const updateDirection = (direction: SplitConfig['direction']) => {
@@ -71,8 +72,13 @@ export function ConfigPanel() {
 
   if (!pdfBytes) return null
 
+  const oddCfg = oddEvenConfig.odd ?? globalConfig
+  const evenCfg = oddEvenConfig.even ?? globalConfig
+
   return (
     <div className={styles.panel}>
+
+      {/* 分割方向 */}
       <section className={styles.section}>
         <h4 className={styles.label}>分割方向</h4>
         <div className={styles.btnGroup}>
@@ -87,9 +93,10 @@ export function ConfigPanel() {
         </div>
       </section>
 
+      {/* 批量模式 */}
       <section className={styles.section}>
         <h4 className={styles.label}>批量模式</h4>
-        <div className={styles.modeGroup}>
+        <div className={styles.modeGrid}>
           {(['uniform', 'oddeven', 'range', 'page'] as const).map(m => (
             <button key={m} className={mode === m ? styles.active : ''} onClick={() => setMode(m)}>
               {{ uniform: '统一', oddeven: '奇偶页', range: '页范围', page: '当前页' }[m]}
@@ -107,31 +114,99 @@ export function ConfigPanel() {
         )}
       </section>
 
-      <section className={styles.section}>
-        <h4 className={styles.label}>
-          {mode === 'oddeven'
-            ? (currentPage % 2 === 1 ? '奇数页比例' : '偶数页比例')
-            : '分割比例'}
-        </h4>
-        <div className={styles.ratioRow}>
+      {/* 分割比例 */}
+      {mode === 'oddeven' ? (
+        <section className={styles.section}>
+          <h4 className={styles.label}>奇偶页比例</h4>
+          {[
+            { label: '奇数页', parity: 1, cfg: oddCfg, setter: setOddConfig },
+            { label: '偶数页', parity: 0, cfg: evenCfg, setter: setEvenConfig },
+          ].map(({ label, parity, cfg, setter }) => {
+            const isActive = currentPage % 2 === parity
+            return (
+              <div key={label} className={`${styles.parityRow} ${isActive ? styles.parityActive : ''}`}>
+                <span className={styles.parityLabel}>{label}</span>
+                <input
+                  type="number" min={5} max={95} step={0.5}
+                  value={(cfg.ratio * 100).toFixed(1)}
+                  onChange={e => {
+                    const r = Math.max(0.05, Math.min(0.95, Number(e.target.value) / 100))
+                    setter({ ...cfg, ratio: r })
+                    pushHistory()
+                  }}
+                  className={styles.ratioInputSm}
+                />
+                <span className={styles.pct}>%</span>
+              </div>
+            )
+          })}
+        </section>
+      ) : (
+        <section className={styles.section}>
+          <h4 className={styles.label}>
+            {mode === 'page' ? `第 ${currentPage} 页比例` : '分割比例'}
+          </h4>
+          <div className={styles.ratioRow}>
+            <input
+              key={`ratio-num-${currentPage}`}
+              type="number" min={5} max={95} step={0.5}
+              value={(config.ratio * 100).toFixed(1)}
+              onChange={e => updateRatio(Number(e.target.value) / 100)}
+              className={styles.ratioInput}
+            />
+            <span className={styles.pct}>%</span>
+          </div>
           <input
-            key={`ratio-num-${currentPage}`}
-            type="number" min={5} max={95} step={0.5}
-            value={(config.ratio * 100).toFixed(1)}
+            key={`ratio-range-${currentPage}`}
+            type="range" min={5} max={95} step={0.5}
+            value={config.ratio * 100}
             onChange={e => updateRatio(Number(e.target.value) / 100)}
-            className={styles.ratioInput}
+            className={styles.slider}
           />
-          <span className={styles.pct}>%</span>
+          {mode === 'page' && Object.keys(pageConfigs).length > 0 && (
+            <div className={styles.chipList}>
+              {Object.entries(pageConfigs).map(([p, cfg]) => (
+                <span
+                  key={p}
+                  className={`${styles.chip} ${Number(p) === currentPage ? styles.chipActive : ''}`}
+                  onClick={() => store.setCurrentPage(Number(p))}
+                  title={`跳转到第 ${p} 页`}
+                >
+                  P{p}: {(cfg.ratio * 100).toFixed(0)}%
+                </span>
+              ))}
+            </div>
+          )}
+          {mode === 'range' && rangeConfigs.length > 0 && (
+            <div className={styles.chipList}>
+              {rangeConfigs.map((rc, i) => {
+                const inRange = currentPage >= rc.from && currentPage <= rc.to
+                return (
+                  <span
+                    key={i}
+                    className={`${styles.chip} ${inRange ? styles.chipActive : ''}`}
+                    onClick={() => removeRangeConfig(i)}
+                    title="点击删除此范围配置"
+                  >
+                    P{rc.from}–{rc.to}: {(rc.config.ratio * 100).toFixed(0)}% ✕
+                  </span>
+                )
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* 预览质量 */}
+      <section className={styles.section}>
+        <h4 className={styles.label}>预览质量</h4>
+        <div className={styles.btnGroup}>
+          <button className={renderQuality === 1 ? styles.active : ''} onClick={() => setRenderQuality(1)}>标准</button>
+          <button className={renderQuality === 2 ? styles.active : ''} onClick={() => setRenderQuality(2)}>高清 2×</button>
         </div>
-        <input
-          key={`ratio-range-${currentPage}`}
-          type="range" min={5} max={95} step={0.5}
-          value={config.ratio * 100}
-          onChange={e => updateRatio(Number(e.target.value) / 100)}
-          className={styles.slider}
-        />
       </section>
 
+      {/* 导出 */}
       <section className={styles.exportSection}>
         <button className="btn-primary" onClick={() => handleExport('single')} disabled={exporting}>
           {exporting ? '导出中...' : '⬇ 下载单 PDF'}
@@ -140,10 +215,14 @@ export function ConfigPanel() {
           {exporting ? '导出中...' : '⬇ 下载 ZIP'}
         </button>
         {exportSuccess && (
-          <p style={{ color: 'var(--success)', fontSize: '12px', textAlign: 'center', margin: 0 }}>
-            ✓ {exportSuccess}
-          </p>
+          <p className={styles.successMsg}>✓ {exportSuccess}</p>
         )}
+        <button
+          className={styles.resetBtn}
+          onClick={() => { if (confirm('确定重置所有分割配置吗？')) resetConfig() }}
+        >
+          ↺ 重置配置
+        </button>
       </section>
     </div>
   )
